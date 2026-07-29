@@ -6,47 +6,85 @@ class WelcomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: Colors.green.shade50,
-      body: Center(
+      body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Icon(
-                Icons.agriculture,
-                size: 120,
-                color: Colors.green,
+              const Spacer(flex: 2),
+
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: Colors.green.shade100),
+                ),
+                child: Column(
+                  children: [
+                    const Icon(
+                      Icons.agriculture,
+                      size: 110,
+                      color: Color(0xFF2E7D32),
+                    ),
+                    const SizedBox(height: 14),
+
+                    const Text(
+                      'Welcome to FarmConnect',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w900,
+                        height: 1.15,
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    Text(
+                      'Buy directly from farmers without mediators',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.grey.shade700,
+                        fontSize: 15,
+                      ),
+                    ),
+
+                    const SizedBox(height: 18),
+
+                    Text(
+                      'Fresh fruits • Organic vegetables • Local grains',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
               ),
 
               const SizedBox(height: 20),
 
-              const Text(
-                "Welcome to FarmConnect",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
+              // Image Above Explore Button
+              Image.asset(
+                'assets/images/welcome.jpg',
+                height: 180,
+                fit: BoxFit.contain,
               ),
 
-              const SizedBox(height: 10),
+              const SizedBox(height: 25),
 
-              const Text(
-                "Buy directly from farmers without mediators",
-                textAlign: TextAlign.center,
-              ),
-
-              const SizedBox(height: 40),
-
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 40,
-                    vertical: 15,
-                  ),
+              FilledButton.icon(
+                icon: const Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 20,
                 ),
+                label: const Text('Explore'),
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -55,8 +93,20 @@ class WelcomeScreen extends StatelessWidget {
                     ),
                   );
                 },
-                child: const Text("Explore"),
               ),
+
+              const SizedBox(height: 14),
+
+              Text(
+                'By continuing you agree to our terms.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: 12,
+                ),
+              ),
+
+              const Spacer(flex: 2),
             ],
           ),
         ),

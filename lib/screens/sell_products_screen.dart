@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../models/product.dart';
-import '../services/app_data.dart';
 import '../services/current_user.dart';
 import '../services/supabase_service.dart';
 
@@ -16,8 +14,8 @@ class _SellProductsScreenState
     extends State<SellProductsScreen> {
 
   String category = "Fruits";
-
   bool useMyProfile = true;
+  bool isLoading = false;
 
   String get loggedInName =>
       CurrentUser.name;
@@ -48,135 +46,147 @@ class _SellProductsScreenState
 
   Future<void> publishProduct() async {
 
-  if (productController.text.isEmpty ||
-      priceController.text.isEmpty ||
-      quantityController.text.isEmpty) {
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          "Please fill all product details",
-        ),
-      ),
-    );
-    return;
-  }
-
-  String farmerName;
-  String phone;
-  String address;
-
-  if (useMyProfile) {
-
-    farmerName = loggedInName;
-    phone = loggedInPhone;
-    address = loggedInAddress;
-
-    if (farmerName.isEmpty) {
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please login first"),
-        ),
-      );
-
-      return;
-    }
-
-  } else {
-
-    if (otherFarmerController.text.isEmpty ||
-        otherPhoneController.text.isEmpty ||
-        otherAddressController.text.isEmpty) {
+    if (productController.text.trim().isEmpty ||
+        priceController.text.trim().isEmpty ||
+        quantityController.text.trim().isEmpty) {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            "Please fill farmer details",
+            "Please fill all product details",
+          ),
+        ),
+      );
+      return;
+    }
+
+    double? price =
+        double.tryParse(priceController.text);
+
+    int? quantity =
+        int.tryParse(quantityController.text);
+
+    if (price == null || quantity == null) {
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Enter valid price and quantity",
+          ),
+        ),
+      );
+      return;
+    }
+
+    String farmerName;
+    String phone;
+    String address;
+
+    if (useMyProfile) {
+
+      farmerName = loggedInName;
+      phone = loggedInPhone;
+      address = loggedInAddress;
+
+      if (farmerName.isEmpty) {
+
+        ScaffoldMessenger.of(context)
+            .showSnackBar(
+          const SnackBar(
+            content: Text(
+              "Please login first",
+            ),
+          ),
+        );
+
+        return;
+      }
+
+    } else {
+
+      farmerName =
+          otherFarmerController.text.trim();
+
+      phone =
+          otherPhoneController.text.trim();
+
+      address =
+          otherAddressController.text.trim();
+
+      if (farmerName.isEmpty ||
+          phone.isEmpty ||
+          address.isEmpty) {
+
+        ScaffoldMessenger.of(context)
+            .showSnackBar(
+          const SnackBar(
+            content: Text(
+              "Please fill farmer details",
+            ),
+          ),
+        );
+
+        return;
+      }
+    }
+
+    try {
+
+      setState(() {
+        isLoading = true;
+      });
+
+      await SupabaseService.supabase
+          .from('products')
+          .insert({
+        'farmer_name': farmerName,
+        'phone': phone,
+        'address': address,
+        'category': category,
+        'product_name':
+            productController.text.trim(),
+        'price': price,
+        'quantity': quantity,
+        'uploaded_by': loggedInName,
+      });
+
+      productController.clear();
+      priceController.clear();
+      quantityController.clear();
+
+      otherFarmerController.clear();
+      otherPhoneController.clear();
+      otherAddressController.clear();
+
+      setState(() {});
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Product Published Successfully",
           ),
         ),
       );
 
-      return;
+    } catch (e) {
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+        SnackBar(
+          content: Text(
+            "Error: $e",
+          ),
+        ),
+      );
+
+    } finally {
+
+      setState(() {
+        isLoading = false;
+      });
     }
-
-    farmerName =
-        otherFarmerController.text.trim();
-
-    phone =
-        otherPhoneController.text.trim();
-
-    address =
-        otherAddressController.text.trim();
   }
-
-  try {
-
-    await SupabaseService.supabase
-        .from('products')
-        .insert({
-      'farmer_name': farmerName,
-      'phone': phone,
-      'address': address,
-      'category': category,
-      'product_name':
-          productController.text.trim(),
-      'price': double.parse(
-        priceController.text.trim(),
-      ),
-      'quantity': int.parse(
-        quantityController.text.trim(),
-      ),
-      'uploaded_by': loggedInName,
-    });
-
-    // Temporary local save also
-    AppData.products.add(
-      Product(
-        farmerName: farmerName,
-        phone: phone,
-        address: address,
-        category: category,
-        productName:
-            productController.text.trim(),
-        price: double.parse(
-          priceController.text.trim(),
-        ),
-        quantity: int.parse(
-          quantityController.text.trim(),
-        ),
-      ),
-    );
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          "Product Published Successfully",
-        ),
-      ),
-    );
-
-    productController.clear();
-    priceController.clear();
-    quantityController.clear();
-
-    otherFarmerController.clear();
-    otherPhoneController.clear();
-    otherAddressController.clear();
-
-    setState(() {});
-
-  } catch (e) {
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          "Error: $e",
-        ),
-      ),
-    );
-  }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -236,15 +246,29 @@ class _SellProductsScreenState
 
             if (useMyProfile)
               Card(
-                elevation: 3,
+                elevation: 5,
+                shape: RoundedRectangleBorder(
+                  borderRadius:
+                      BorderRadius.circular(15),
+                ),
                 child: ListTile(
                   leading: const CircleAvatar(
-                    child: Icon(Icons.person),
+                    radius: 28,
+                    backgroundColor:
+                        Colors.green,
+                    child: Icon(
+                      Icons.person,
+                      color: Colors.white,
+                    ),
                   ),
                   title: Text(
                     loggedInName.isEmpty
                         ? "No User Logged In"
                         : loggedInName,
+                    style: const TextStyle(
+                      fontWeight:
+                          FontWeight.bold,
+                    ),
                   ),
                   subtitle: Text(
                     "$loggedInPhone\n$loggedInAddress",
@@ -310,17 +334,14 @@ class _SellProductsScreenState
                     OutlineInputBorder(),
               ),
               items: const [
-
                 DropdownMenuItem(
                   value: "Fruits",
                   child: Text("Fruits"),
                 ),
-
                 DropdownMenuItem(
                   value: "Vegetables",
                   child: Text("Vegetables"),
                 ),
-
                 DropdownMenuItem(
                   value: "Grains",
                   child: Text("Grains"),
@@ -379,11 +400,27 @@ class _SellProductsScreenState
 
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              height: 55,
+              child: ElevatedButton.icon(
                 onPressed:
-                    publishProduct,
-                child: const Text(
-                    "Publish Product"),
+                    isLoading
+                        ? null
+                        : publishProduct,
+                icon: isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child:
+                            CircularProgressIndicator(),
+                      )
+                    : const Icon(
+                        Icons.publish,
+                      ),
+                label: Text(
+                  isLoading
+                      ? "Publishing..."
+                      : "Publish Product",
+                ),
               ),
             ),
 
@@ -392,7 +429,7 @@ class _SellProductsScreenState
             const Divider(),
 
             const Text(
-              "Published Products",
+              "My Published Products",
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -401,26 +438,93 @@ class _SellProductsScreenState
 
             const SizedBox(height: 15),
 
-            ...AppData.products.map((product) {
+            FutureBuilder(
+              future: SupabaseService
+                  .supabase
+                  .from('products')
+                  .select()
+                  .eq(
+                    'uploaded_by',
+                    CurrentUser.name,
+                  )
+                  .order('id'),
 
-              return Card(
-                child: ListTile(
-                  leading: const Icon(
-                    Icons.shopping_basket,
-                    color: Colors.green,
-                  ),
-                  title:
-                      Text(product.productName),
-                  subtitle: Text(
-                    "Category: ${product.category}\n"
-                    "Price: ₹${product.price}/kg\n"
-                    "Quantity: ${product.quantity} kg\n"
-                    "Farmer: ${product.farmerName}",
-                  ),
-                ),
-              );
+              builder:
+                  (context, snapshot) {
 
-            }).toList(),
+                if (!snapshot.hasData) {
+                  return const Center(
+                    child:
+                        CircularProgressIndicator(),
+                  );
+                }
+
+                final products =
+                    snapshot.data
+                        as List<dynamic>;
+
+                if (products.isEmpty) {
+                  return const Card(
+                    child: Padding(
+                      padding:
+                          EdgeInsets.all(20),
+                      child: Center(
+                        child: Text(
+                          "No Products Published Yet",
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                return Column(
+                  children: products.map(
+                    (product) {
+
+                      return Card(
+                        elevation: 4,
+                        margin:
+                            const EdgeInsets.only(
+                          bottom: 12,
+                        ),
+
+                        child: ListTile(
+                          leading:
+                              CircleAvatar(
+                            backgroundColor:
+                                Colors.green,
+                            child: Text(
+                              product[
+                                      'product_name']
+                                  .toString()[0]
+                                  .toUpperCase(),
+                            ),
+                          ),
+
+                          title: Text(
+                            product[
+                                'product_name'],
+                          ),
+
+                          subtitle: Text(
+                            "Category : ${product['category']}\n"
+                            "Price : ₹${product['price']}/kg\n"
+                            "Quantity : ${product['quantity']} kg",
+                          ),
+
+                          trailing:
+                              const Icon(
+                            Icons.check_circle,
+                            color:
+                                Colors.green,
+                          ),
+                        ),
+                      );
+                    },
+                  ).toList(),
+                );
+              },
+            ),
           ],
         ),
       ),

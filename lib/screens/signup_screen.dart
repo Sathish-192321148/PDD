@@ -11,20 +11,11 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
-  final TextEditingController nameController =
-      TextEditingController();
-
-  final TextEditingController phoneController =
-      TextEditingController();
-
-  final TextEditingController passwordController =
-      TextEditingController();
-
-  final TextEditingController addressController =
-      TextEditingController();
-
-  final TextEditingController districtController =
-      TextEditingController();
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController addressController = TextEditingController();
+  final TextEditingController districtController = TextEditingController();
 
   bool isLoading = false;
 
@@ -36,7 +27,7 @@ class _SignupScreenState extends State<SignupScreen> {
         districtController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Please fill all fields"),
+          content: Text('Please fill all fields'),
         ),
       );
       return;
@@ -47,9 +38,7 @@ class _SignupScreenState extends State<SignupScreen> {
     });
 
     try {
-      await SupabaseService.supabase
-          .from('users')
-          .insert({
+      await SupabaseService.supabase.from('users').insert({
         'name': nameController.text.trim(),
         'phone': phoneController.text.trim(),
         'password': passwordController.text.trim(),
@@ -67,9 +56,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            "Registration Successful",
-          ),
+          content: Text('Registration Successful'),
         ),
       );
 
@@ -84,17 +71,15 @@ class _SignupScreenState extends State<SignupScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            "Registration Failed: $e",
-          ),
+          content: Text('Registration Failed: $e'),
         ),
       );
-    }
-
-    if (mounted) {
-      setState(() {
-        isLoading = false;
-      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 
@@ -102,81 +87,82 @@ class _SignupScreenState extends State<SignupScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Sign Up"),
-        backgroundColor: Colors.green,
+        title: const Text('Sign Up'),
+        // Uses global appBarTheme colors
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(
-                labelText: "Name",
-                border: OutlineInputBorder(),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              const SizedBox(height: 10),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Create your account',
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                ),
               ),
-            ),
-
-            const SizedBox(height: 15),
-
-            TextField(
-              controller: phoneController,
-              keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
-                labelText: "Phone Number",
-                border: OutlineInputBorder(),
+              const SizedBox(height: 6),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'It takes less than a minute',
+                  style: TextStyle(color: Colors.grey.shade700),
+                ),
               ),
-            ),
-
-            const SizedBox(height: 15),
-
-            TextField(
-              controller: passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: "Password",
-                border: OutlineInputBorder(),
+              const SizedBox(height: 24),
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: 'Name'),
               ),
-            ),
-
-            const SizedBox(height: 15),
-
-            TextField(
-              controller: addressController,
-              decoration: const InputDecoration(
-                labelText: "Address",
-                border: OutlineInputBorder(),
+              const SizedBox(height: 14),
+              TextField(
+                controller: phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(labelText: 'Phone Number'),
               ),
-            ),
-
-            const SizedBox(height: 15),
-
-            TextField(
-              controller: districtController,
-              decoration: const InputDecoration(
-                labelText: "District",
-                border: OutlineInputBorder(),
+              const SizedBox(height: 14),
+              TextField(
+                controller: passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Password'),
               ),
-            ),
-
-            const SizedBox(height: 30),
-
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed:
-                    isLoading ? null : registerUser,
-                child: isLoading
-                    ? const CircularProgressIndicator(
-                        color: Colors.white,
-                      )
-                    : const Text("Sign Up"),
+              const SizedBox(height: 14),
+              TextField(
+                controller: addressController,
+                decoration: const InputDecoration(labelText: 'Address'),
               ),
-            ),
-          ],
+              const SizedBox(height: 14),
+              TextField(
+                controller: districtController,
+                decoration: const InputDecoration(labelText: 'District'),
+              ),
+              const SizedBox(height: 22),
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton(
+                  onPressed: isLoading ? null : registerUser,
+                  child: isLoading
+                      ? const SizedBox(
+                          height: 22,
+                          width: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 3,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text('Sign Up'),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
+
